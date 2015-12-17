@@ -10,6 +10,7 @@ public class StockController : MonoBehaviour {
 
     static int countCube = 0;
 
+    Vector3 v;
 
     // Use this for initialization
     void Start()
@@ -18,17 +19,19 @@ public class StockController : MonoBehaviour {
         Packages = new List<int>(NbPackage);
 
         int MaxPackageWeight = 50;
-        for (int i = 0; i < Packages.Count - 1; i++)   //Instanciation des poids de chaque paquet
+
+        for (int i = 0; i < NbPackage - 1; i++)   //Instanciation des poids de chaque paquet
         {
-            if (RestWeight <= Packages.Count - 1 - i)
+            if (RestWeight <= NbPackage - 1 - i)
             {
                 RestWeight = 0;
-                Packages[i] = 1;
+                Packages.Add(1);
                 CreateCube(1);
             }
             else
             {
-                Packages[i] = Random.Range(1, 2*(MaxPackageWeight/NbPackage));
+                
+                Packages.Add(Random.Range(1, MaxPackageWeight)) ;
                 RestWeight -= Packages[i];
                 CreateCube(Packages[i]);
             }
@@ -36,18 +39,23 @@ public class StockController : MonoBehaviour {
         }
         if (RestWeight != 0)
         {
-            //Packages[Packages.Count - 1] = RestWeight;
-            CreateCube(RestWeight);
+            if(RestWeight>30)
+            {
+                Packages.Add(30);
+                CreateCube(30);
+            }
+            else
+            {
+                Packages.Add(RestWeight);
+                CreateCube(RestWeight);
+            }
         }
         else
         {
-            Packages[Packages.Count - 1] = 1;
+            Packages.Add(1);
             CreateCube(1);
         }
-
-
     }
-
 
     // Update is called once per frame
     void Update()
@@ -55,26 +63,14 @@ public class StockController : MonoBehaviour {
 
     }
 
-    void CreateCube(int Poid)
+    void CreateCube(int Poids)
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         cube.AddComponent<Rigidbody>();
-       // cube.GetComponent<Rigidbody>().useGravity = false;
-        cube.GetComponent<Rigidbody>().mass = Poid;
-        if(countCube % 3 == 0)
-        {
-            cube.GetComponent<Rigidbody>().position = new Vector3(countCube, 0, 0);
-        }
-        if(countCube % 3 == 1)
-        {
-            cube.GetComponent<Rigidbody>().position = new Vector3(0, countCube, 0);
-        }
-        if(countCube % 3 == 2)
-        {
-            cube.GetComponent<Rigidbody>().position = new Vector3(countCube, countCube, 0);
-        }
-      
-        countCube++;
+        cube.GetComponent<Rigidbody>().mass = Poids;
+
+        v = new Vector3(Random.Range(-15, 15), Random.Range(1,12), Random.Range(-15, 15));
+        cube.GetComponent<Rigidbody>().position = v;  
     }
 }
 
