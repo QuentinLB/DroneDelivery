@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class DroneController : MonoBehaviour {
 
-    enum DroneStates
+    public enum DroneStates
     {
         Delivery,
         Return,
@@ -14,31 +14,31 @@ public class DroneController : MonoBehaviour {
         End
     }
 
-    public FlockController flock;
-
-    private DroneStates state;
-
-    public Transform stockPosition;
-
-    public float maxSpeed;
-
-    public Rigidbody rb;
-
-    public StockController stockController;
-
     public int id;
-
+    public DroneStates state;
+    public float maxSpeed;
+    public float minSpeed;
+    public Rigidbody rb;
     public int maxWeight;
+    public bool isInTeam = false;
+
+    public FlockController flock;
+    public DeliveryController deliveryController;
+    public Vector3 deliveryPosition;
+    public StockController stockController;
+    public Vector3 stockPosition;
 
     public int packageTargetId = -1;
     public GameObject packageTarget;
 
-    public bool isInTeam = false;
+    private float distMin = 4;
 
-
-    public GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-	// Use this for initialization
+  //  public GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+	
+    // Use this for initialization
 	void Start () {
+        stockPosition = stockController.GetComponent<Rigidbody>().transform.position;
+        deliveryPosition = deliveryController.GetComponent<Rigidbody>().transform.position;
         rb = GetComponent<Rigidbody>();
         state = DroneStates.Return;  
         
@@ -54,10 +54,10 @@ public class DroneController : MonoBehaviour {
                 SearchPackage();
                 break;
             case DroneStates.Waiting:
-                // get wake up on NewArrival broadcast
+                MoveTo(packageTarget.transform.position);
                 break;
             case DroneStates.Delivery:
-                //do nothing
+                Delivery();
                 break;
             case DroneStates.End:
                 //do nothing
@@ -69,7 +69,8 @@ public class DroneController : MonoBehaviour {
 
     void SearchPackage()
     {
-        if ((packageTarget.transform.position - transform.position).magnitude < 2)
+        Vector3 dist = packageTarget.transform.position - transform.position;
+        if (dist.magnitude < distMin)
         {
             if(isInTeam)
             {
@@ -110,8 +111,8 @@ public class DroneController : MonoBehaviour {
         isInTeam = false;
         packageTargetId = -1;
         packageTarget = null;
-
-        if ((stockPosition.position - transform.position).magnitude < 2)
+        Vector3 dist = stockPosition - transform.position;
+        if (dist.magnitude < distMin)
         {
             state = DroneStates.Searching;
 
@@ -120,7 +121,7 @@ public class DroneController : MonoBehaviour {
             {
                 packageTarget = stockController.GetPackage(packageTargetId);
                 flock.JoinDeliveryTeam(id, packageTargetId);
-            } 
+            }
             else
             {
                 packageTargetId = stockController.SelectPackage(maxWeight);
@@ -131,32 +132,63 @@ public class DroneController : MonoBehaviour {
                     packageTarget = stockController.GetPackage(packageTargetId);
                 }
             }
-            
+
         }
         else
-            MoveTo(stockPosition.position);
+        {
+            MoveTo(stockPosition);
+        }
+
+    }
+
+   
+
+    void Delivery()
+    {
+        Vector3 dist = deliveryPosition - packageTarget.GetComponent<Rigidbody>().transform.position;
+        if (dist.magnitude < distMin)
+        {
+            rb.velocity = Vector3.zero;
+            packageTarget.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            state = DroneStates.Return;
+        }
+        else
+        {
+            MoveWithBox(deliveryPosition, packageTarget);
+        }
     }
 
     public void MoveTo(Vector3 target)
     {
         Vector3 direction = target - transform.position;
-        Vector3 force = direction.normalized * maxSpeed;
+        Vector3 force = direction.normalized * maxSpeed * ((direction.magnitude < distMin) ? -1 : 1);
         Quaternion desiredRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, Time.deltaTime * 2);
         rb.velocity = force;
+        Vector3 pos = rb.transform.position;
+        pos.y = 3;
+        rb.transform.position = pos;
     }
 
-    public void SoloTransport(Vector3 target, GameObject cube)
+    void MoveWithBox(Vector3 target, GameObject box)
     {
+        Rigidbody box_rb = box.GetComponent<Rigidbody>();
+        box_rb.mass = rb.mass;
         Vector3 direction = target - transform.position;
-        Vector3 force = direction.normalized * maxSpeed;
+        Vector3 force = direction.normalized * maxSpeed * ((direction.magnitude < distMin) ? -1 : 1);
         Quaternion desiredRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, Time.deltaTime * 2);
         rb.velocity = force;
-        cube.GetComponent<Rigidbody>().velocity = force;
-        
-    }
+        box_rb.velocity = force;
 
+        Vector3 pos = rb.transform.position;
+        pos.y = 3;
+        rb.transform.position = pos;
+
+        pos = box_rb.transform.position;
+        pos.y = 2;
+        box_rb.transform.position = pos;
+    }
 
     public bool GetMessage(int from, string message)
     {

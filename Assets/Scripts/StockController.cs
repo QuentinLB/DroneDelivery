@@ -79,9 +79,10 @@ public class StockController : MonoBehaviour {
     public int SelectPackage(int maxWeight)
     {
         // on retourne le paquet au poids le plus faible
-        if (Packages.Count < 1)
+        if (countCube >= Packages.Count)
             return -1;
-        return Packages.IndexOf(Packages.Min());
+        
+        return countCube++;
     }
 
     public GameObject GetPackage(int i)

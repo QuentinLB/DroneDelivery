@@ -19,7 +19,7 @@ public class DeliveryController : MonoBehaviour {
     
     void OnCollisionEnter (Collision col)
     {
-        int a = (int) (col.gameObject.GetComponent<Rigidbody>().mass);
-        DPackages.Add(a);
+        //int a = (int) (col.gameObject.GetComponent<Rigidbody>().mass);
+       // DPackages.Add(a);
     }
 }

@@ -6,9 +6,11 @@ public class FlockController : MonoBehaviour {
     public DroneController prefab;
     public int droneNumber;
     public float maxSpeed;
+    public float minSpeed;
     public int maxWeight;
 
-    public Transform stockPosition;
+    public StockController stockController;
+    public DeliveryController deliveryController;
 
 
     List<DroneController> drones = new List<DroneController>();
@@ -41,9 +43,11 @@ public class FlockController : MonoBehaviour {
                         Random.value * GetComponent<Collider>().bounds.size.y,
                         Random.value * GetComponent<Collider>().bounds.size.z) - GetComponent<Collider>().bounds.extents;
         drone.flock = this;
-        drone.stockPosition = stockPosition;
+        drone.stockController = stockController;
+        drone.deliveryController = deliveryController;
         drone.id = i;
         drone.maxSpeed = maxSpeed;
+        drone.minSpeed = minSpeed;
         drone.maxWeight = maxWeight;
         drones.Add(drone);
     }
