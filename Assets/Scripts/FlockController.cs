@@ -4,16 +4,21 @@ using System.Collections.Generic;
 
 public class FlockController : MonoBehaviour {
     public DroneController prefab;
-    public int drone_number;
+    public int droneNumber;
+    public float maxSpeed;
+    public int maxWeight;
+
     public Transform stockPosition;
 
     List<DroneController> drones = new List<DroneController>();
 
     List<DroneController> dronesInStock = new List<DroneController>();
 
+    Dictionary<int, List<int>> deliveryTeams = new Dictionary<int, List<int>>();
+
     // Use this for initialization
     void Start () {
-        for (int i = 0; i < drone_number; i++)
+        for (int i = 0; i < droneNumber; i++)
         {
             SpawnDrone(i);
         }
@@ -35,32 +40,51 @@ public class FlockController : MonoBehaviour {
                         Random.value * GetComponent<Collider>().bounds.size.z) - GetComponent<Collider>().bounds.extents;
         drone.flock = this;
         drone.stockPosition = stockPosition;
-        drone.id = i; 
+        drone.id = i;
+        drone.maxSpeed = maxSpeed;
+        drone.maxWeight = maxWeight;
         drones.Add(drone);
-        // You can also acccess other components / scripts of the clone
-        //droneClone.GetComponent<droneController>().DoSomething();
     }
 
     public bool BroadcastMessage(int id, string message)
     {
+        bool result = false;
         foreach(DroneController drone in drones)
         {
             if (drone.id != id)
             {
-                return drone.GetMessage(id, message);
+                if(drone.GetMessage(id, message))
+                {
+                    result = true;
+                }
             }
         }
-        return true;
+        return result;
     }
 
 
-    public void SendMessage(int from, int to, string message)
+    public bool SendMessage(int from, int to, string message)
     {
-        drones[to].GetMessage(from, message);
+        return drones[to].GetMessage(from, message);
     }
 
     public void NotifyArrivalInStockArea(DroneController drone)
     {
         dronesInStock.Add(drone);
+    }
+
+    public void CreateNewDeliveryTeam(int droneId, int packageId)
+    {
+        deliveryTeams.Add(packageId, new List<int>(){ droneId});
+    }
+
+    public void JoinDeliveryTeam(int droneId, int packageId)
+    {
+        deliveryTeams[packageId].Add(droneId);
+    }
+
+    public List<DroneController> GetDeliveryTeam(int packageId)
+    {
+        return drones.FindAll(x => deliveryTeams[packageId].Contains(x.id));
     }
 }

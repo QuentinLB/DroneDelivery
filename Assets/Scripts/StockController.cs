@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 
 public class StockController : MonoBehaviour {
@@ -75,9 +76,12 @@ public class StockController : MonoBehaviour {
         Cubes.Add(cube);
     }
 
-    public GameObject SelectPackage(int maxWeight)
+    public int SelectPackage(int maxWeight)
     {
-        return Cubes.Find(x => x.GetComponent<Rigidbody>().mass <= maxWeight);
+        // on retourne le paquet au poids le plus faible
+        if (Packages.Count < 1)
+            return -1;
+        return Packages.IndexOf(Packages.Min());
     }
 
     public GameObject GetPackage(int i)
@@ -87,7 +91,8 @@ public class StockController : MonoBehaviour {
 
     public void RemovePackage(int i)
     {
-        Packages.Remove(i);
+        Packages.RemoveAt(i);
+        Cubes.RemoveAt(i);
     }
 }
 
