@@ -31,6 +31,8 @@ public class DroneController : MonoBehaviour {
     public int packageTargetId = -1;
     public GameObject packageTarget;
 
+    public List<int> helpNeeded = new List<int>();
+
     private float distMin = 4;
 
   //  public GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -117,10 +119,17 @@ public class DroneController : MonoBehaviour {
             state = DroneStates.Searching;
 
             //rb.velocity = Vector3.zero;
-            if (flock.BroadcastMessage(id, "ArrivedInStock"))
+            bool res = flock.BroadcastMessage(id, "ArrivedInStock");
+            if (res)
             {
-                packageTarget = stockController.GetPackage(packageTargetId);
-                flock.JoinDeliveryTeam(id, packageTargetId);
+                if(helpNeeded.Count>0)
+                {
+                    //helpNeeded.Sort((a, b) => a.CompareTo(b));
+                    packageTargetId = helpNeeded[UnityEngine.Random.Range(0,helpNeeded.Count-1)];
+                    packageTarget = stockController.GetPackage(packageTargetId);
+                    flock.JoinDeliveryTeam(id, packageTargetId);
+                    isInTeam = true;
+                }
             }
             else
             {
@@ -148,6 +157,7 @@ public class DroneController : MonoBehaviour {
         Vector3 dist = deliveryPosition - packageTarget.GetComponent<Rigidbody>().transform.position;
         if (dist.magnitude < distMin)
         {
+            stockController.RemovePackage(packageTargetId);
             rb.velocity = Vector3.zero;
             packageTarget.GetComponent<Rigidbody>().velocity = Vector3.zero;
             state = DroneStates.Return;
@@ -198,20 +208,15 @@ public class DroneController : MonoBehaviour {
         }
         else if(message == "ArrivedInStock" && state == DroneStates.Waiting)
         {
-            if (flock.SendMessage(id, from, "RequestingHelp;" + packageTargetId))
-                return true;
-            else
-                return false;
+            flock.SendMessage(id, from, "RequestingHelp;" + packageTargetId);
+            return true;
         }
         else if(message.StartsWith("RequestingHelp", StringComparison.InvariantCulture) && state == DroneStates.Searching)
         {
-            if (!isInTeam)
-            {
-                packageTargetId = int.Parse(message.Split(';')[1]);
-                isInTeam = true;
-                return true;
-            }
-            return false;
+            int boxId = int.Parse(message.Split(';')[1]);
+            if (!helpNeeded.Contains(boxId))
+                helpNeeded.Add(boxId);
+            return true;
         }
         else if (message == "HelpGranted" && state == DroneStates.Waiting)
         {

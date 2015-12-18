@@ -36,7 +36,6 @@ public class FlockController : MonoBehaviour {
     void SpawnDrone(int i)
     {
         DroneController drone = (DroneController)Instantiate(prefab, transform.position, transform.rotation);
-       	List<DroneController> drones = new List<DroneController>();
         drone.transform.parent = transform;
         drone.transform.localPosition = new Vector3(
                         Random.value * GetComponent<Collider>().bounds.size.x,
@@ -59,7 +58,8 @@ public class FlockController : MonoBehaviour {
         {
             if (drone.id != id)
             {
-                if(drone.GetMessage(id, message))
+                bool res = drone.GetMessage(id, message);
+                if (res)
                 {
                     result = true;
                 }

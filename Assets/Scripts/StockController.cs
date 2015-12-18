@@ -5,10 +5,12 @@ using System.Collections.Generic;
 
 public class StockController : MonoBehaviour {
     
-    public int NbPackage;
-    public int MaxStockWeight;
-    public List<int> Packages;   // Liste de paquet et poid correspondant
-    public List<GameObject> Cubes = new List<GameObject>();   // Liste de paquet et poid correspondant
+    public int NbPackage = 50;
+    public int MaxStockWeight = 200;
+    int MaxPackageWeight = 50;
+
+    public Dictionary<int,int> Packages;   // Liste de paquet et poid correspondant
+    public Dictionary<int, GameObject> Cubes;   // Liste de paquet et poid correspondant
 
     static int countCube = 0;
 
@@ -18,24 +20,23 @@ public class StockController : MonoBehaviour {
     void Start()
     {
         int RestWeight = MaxStockWeight;
-        Packages = new List<int>(NbPackage);
-
-        int MaxPackageWeight = 50;
+        Packages = new Dictionary<int, int>();
+        Cubes = new Dictionary<int, GameObject>();
 
         for (int i = 0; i < NbPackage - 1; i++)   //Instanciation des poids de chaque paquet
         {
             if (RestWeight <= NbPackage - 1 - i)
             {
                 RestWeight = 0;
-                Packages.Add(1);
-                CreateCube(1);
+                Packages.Add(i,1);
+                CreateCube(i,1);
             }
             else
             {
                 
-                Packages.Add(Random.Range(1, MaxPackageWeight)) ;
+                Packages.Add(i,Random.Range(1, MaxPackageWeight)) ;
                 RestWeight -= Packages[i];
-                CreateCube(Packages[i]);
+                CreateCube(i, Packages[i]);
             }
 
         }
@@ -43,19 +44,19 @@ public class StockController : MonoBehaviour {
         {
             if(RestWeight>30)
             {
-                Packages.Add(30);
-                CreateCube(30);
+                Packages.Add(NbPackage,30);
+                CreateCube(NbPackage, 30);
             }
             else
             {
-                Packages.Add(RestWeight);
-                CreateCube(RestWeight);
+                Packages.Add(NbPackage, RestWeight);
+                CreateCube(NbPackage, RestWeight);
             }
         }
         else
         {
-            Packages.Add(1);
-            CreateCube(1);
+            Packages.Add(NbPackage, 1);
+            CreateCube(NbPackage, 1);
         }
     }
 
@@ -65,7 +66,7 @@ public class StockController : MonoBehaviour {
 
     }
 
-    void CreateCube(int Poids)
+    void CreateCube(int i, int Poids)
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         cube.AddComponent<Rigidbody>();
@@ -73,15 +74,14 @@ public class StockController : MonoBehaviour {
 
         v = new Vector3(Random.Range(-15, 15), Random.Range(1,12), Random.Range(-15, 15));
         cube.GetComponent<Rigidbody>().position = v;
-        Cubes.Add(cube);
+        Cubes.Add(i,cube);
     }
 
     public int SelectPackage(int maxWeight)
     {
         // on retourne le paquet au poids le plus faible
-        if (countCube >= Packages.Count)
+        if (countCube>Packages.Count)
             return -1;
-        
         return countCube++;
     }
 
@@ -92,8 +92,8 @@ public class StockController : MonoBehaviour {
 
     public void RemovePackage(int i)
     {
-        Packages.RemoveAt(i);
-        Cubes.RemoveAt(i);
+        Packages.Remove(i);
+        Cubes.Remove(i);
     }
 }
 
