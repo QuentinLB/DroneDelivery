@@ -19,6 +19,6 @@ public class DeliveryController : MonoBehaviour {
     
     void OnCollisionEnter (Collision col)
     {
-        DPackage.Add(col.gameObject.GetComponent<Rigidbody>().mass);
+        //DPackage.Add(col.gameObject.GetComponent<Rigidbody>().mass);
     }
 }

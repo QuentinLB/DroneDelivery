@@ -7,6 +7,7 @@ public class StockController : MonoBehaviour {
     public int NbPackage;
     public int MaxStockWeight;
     public List<int> Packages;   // Liste de paquet et poid correspondant
+    public List<GameObject> Cubes = new List<GameObject>();   // Liste de paquet et poid correspondant
 
     static int countCube = 0;
 
@@ -70,7 +71,23 @@ public class StockController : MonoBehaviour {
         cube.GetComponent<Rigidbody>().mass = Poids;
 
         v = new Vector3(Random.Range(-15, 15), Random.Range(1,12), Random.Range(-15, 15));
-        cube.GetComponent<Rigidbody>().position = v;  
+        cube.GetComponent<Rigidbody>().position = v;
+        Cubes.Add(cube);
+    }
+
+    public GameObject SelectPackage(int maxWeight)
+    {
+        return Cubes.Find(x => x.GetComponent<Rigidbody>().mass <= maxWeight);
+    }
+
+    public GameObject GetPackage(int i)
+    {
+        return Cubes[i];
+    }
+
+    public void RemovePackage(int i)
+    {
+        Packages.Remove(i);
     }
 }
 

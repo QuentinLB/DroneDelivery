@@ -1,10 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
+using System;
 
-public class DroneController_new : MonoBehaviour
-{
-	internal FlockController controller;
+public class DroneController : MonoBehaviour {
 
     enum DroneStates
     {
@@ -14,40 +12,100 @@ public class DroneController_new : MonoBehaviour
         Waiting
     }
 
-    IEnumerator Start()
-	{
-		while (true)
-		{
-			if (controller)
-			{
-				GetComponent<Rigidbody>().velocity += steer() * Time.deltaTime;
+    public FlockController flock;
 
-				// enforce minimum and maximum speeds for the boids
-				float speed = GetComponent<Rigidbody>().velocity.magnitude;
-				if (speed > controller.maxVelocity)
-				{
-					GetComponent<Rigidbody>().velocity = GetComponent<Rigidbody>().velocity.normalized * controller.maxVelocity;
-				}
-				else if (speed < controller.minVelocity)
-				{
-					GetComponent<Rigidbody>().velocity = GetComponent<Rigidbody>().velocity.normalized * controller.minVelocity;
-				}
-			}
-            float waitTime = 0.3f;// Random.Range(0.3f, 0.5f);
-			yield return new WaitForSeconds(waitTime);
-		}
+    private DroneStates state;
+
+    public Transform stockPosition;
+
+    public float maxSpeed;
+
+    public Rigidbody rb;
+
+    public StockController stockController;
+
+    public int id;
+
+    public int maxWeight;
+
+    public GameObject packageTarget;
+
+	// Use this for initialization
+	void Start () {
+        rb = GetComponent<Rigidbody>();
+        state = DroneStates.Return;
+
+	}
+	
+	void FixedUpdate () {
+        switch (state)
+        {
+            case DroneStates.Return:
+                ReturnToStock();
+                break;
+            case DroneStates.Searching:
+                SearchPackage();
+                break;
+            default:
+                break;
+        }
 	}
 
-	Vector3 steer()
-	{
-		Vector3 randomize = new Vector3((Random.value * 2) - 1, (Random.value * 2) - 1, (Random.value * 2) - 1);
-		randomize.Normalize();
-        randomize *= 1;// controller.randomness;
+    void SearchPackage()
+    {
+        if ((packageTarget.transform.position - transform.position).magnitude < 2)
+        {
 
-		Vector3 center = controller.flockCenter - transform.localPosition;
-		Vector3 velocity = controller.flockVelocity - GetComponent<Rigidbody>().velocity;
-		Vector3 follow = controller.target.localPosition - transform.localPosition;
-        return controller.target.localPosition - transform.localPosition; 
-        //return (center + velocity + follow * 10 + randomize);
+        }
+        else
+        {
+            MoveTo(packageTarget.transform.position);
+        }
+    }
+
+    void ReturnToStock()
+    {
+        if((stockPosition.position - transform.position).magnitude < 2)
+        {
+            //rb.velocity = Vector3.zero;
+            state = DroneStates.Searching;
+            if(flock.BroadcastMessage(id,"ArrivedInStock"))
+            {
+
+            }
+            else
+            {
+                packageTarget = stockController.SelectPackage(maxWeight);
+            }
+        }
+        else
+            MoveTo(stockPosition.position);
+    }
+
+    void MoveTo(Vector3 target)
+    {
+        Vector3 direction = stockPosition.position - transform.position;
+        Vector3 force = direction.normalized * maxSpeed;
+        Quaternion desiredRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, Time.deltaTime * 2);
+        rb.velocity = force;
+    }
+
+    public bool GetMessage(int from, string message)
+    {
+        if (message == "ArrivedInStock" && state != DroneStates.Waiting)
+        {
+            return false;
+        }
+        else if(message == "ArrivedInStock" && state == DroneStates.Waiting)
+        {
+            flock.SendMessage(id, from, "RequestingHelp");
+            return true;
+        }
+        else if(message == "RequestingHelp" && state == DroneStates.Searching)
+        {
+
+        }
+        return false;
     }
 }
