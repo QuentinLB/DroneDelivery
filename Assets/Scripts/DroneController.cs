@@ -35,11 +35,14 @@ public class DroneController : MonoBehaviour {
 
     public bool isInTeam = false;
 
+
+    public GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 	// Use this for initialization
 	void Start () {
         rb = GetComponent<Rigidbody>();
-        state = DroneStates.Return;
-	}
+        state = DroneStates.Return;  
+        
+   	}
 	
 	void FixedUpdate () {
         switch (state)
@@ -62,7 +65,7 @@ public class DroneController : MonoBehaviour {
             default:
                 break;
         }
-	}
+    }
 
     void SearchPackage()
     {
@@ -134,7 +137,7 @@ public class DroneController : MonoBehaviour {
             MoveTo(stockPosition.position);
     }
 
-    void MoveTo(Vector3 target)
+    public void MoveTo(Vector3 target)
     {
         Vector3 direction = target - transform.position;
         Vector3 force = direction.normalized * maxSpeed;
@@ -142,6 +145,18 @@ public class DroneController : MonoBehaviour {
         transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, Time.deltaTime * 2);
         rb.velocity = force;
     }
+
+    public void SoloTransport(Vector3 target, GameObject cube)
+    {
+        Vector3 direction = target - transform.position;
+        Vector3 force = direction.normalized * maxSpeed;
+        Quaternion desiredRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, desiredRotation, Time.deltaTime * 2);
+        rb.velocity = force;
+        cube.GetComponent<Rigidbody>().velocity = force;
+        
+    }
+
 
     public bool GetMessage(int from, string message)
     {

@@ -10,6 +10,7 @@ public class FlockController : MonoBehaviour {
 
     public Transform stockPosition;
 
+
     List<DroneController> drones = new List<DroneController>();
 
     List<DroneController> dronesInStock = new List<DroneController>();
@@ -22,6 +23,7 @@ public class FlockController : MonoBehaviour {
         {
             SpawnDrone(i);
         }
+        
 	}
 	
 	// Update is called once per frame
